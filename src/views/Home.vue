@@ -8,8 +8,13 @@
     <ProtectionScore :score="protectionScore" :blocked="blocked" :total="domains.length" />
 
     <div class="mt-4 text-center text-sm text-gray-400">
-      Ваш IP-адрес: <span class="font-mono text-white">{{ userIP }}</span>
+      Ваш IPv4-адрес: <span class="font-mono text-white">{{ userIP }}</span>
     </div>
+
+    <div v-if="isIPv6" class="mt-4 text-center text-sm text-gray-400">
+      IPv6-адрес: <span class="font-mono text-white">{{ userIPv6 }}</span>
+    </div>
+
 <!--    <div class="text-center text-sm text-gray-400">-->
 <!--      DNS-резолвер: <span class="font-mono text-white">{{ resolver }}</span>-->
 <!--    </div>-->
@@ -35,9 +40,9 @@
       <svg class="animate-spin inline w-4 h-4 mr-1 text-blue-400" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8z"></path></svg> Идёт проверка. Пожалуйста, подождите...
     </div>
 
-    <div v-if="isWrong" class="mt-2 text-red-400 text-sm font-medium">
-      ❌ Ошибка получения данных. Что то пошло не так.
-    </div>
+<!--    <div v-if="isWrong" class="mt-2 text-red-400 text-sm font-medium">-->
+<!--      😕 Ошибка получения данных. Что то пошло не так.-->
+<!--    </div>-->
 
     <div class="mt-4 text-xs text-gray-500 bg-gray-800 rounded p-4 w-full max-w-2xl">
       <div class="mb-1 font-semibold">Отладка:</div>
@@ -46,7 +51,7 @@
       <div>Подтверждение блокировок: <span :class="blockConfirmed ? 'text-green-400' : 'text-red-400'">{{ blockConfirmed }}</span></div>
     </div>
 
-    <div v-if="locationInfo" class="mt-4 text-xs text-gray-500 bg-gray-800 rounded p-4 w-full max-w-2xl">
+    <div v-if="locationInfo && !isWrong" class="mt-4 text-xs text-gray-500 bg-gray-800 rounded p-4 w-full max-w-2xl">
       <div class="mb-1 font-semibold">Геолокация по IP:</div>
       <div>Страна: <span class="text-white">{{ locationInfo.country }}</span></div>
       <div>Город: <span class="text-white">{{ locationInfo.city }}</span></div>
@@ -108,7 +113,7 @@ const protectionScore = ref(0)
 const userIP = ref('определяется...')
 const userIPv6 = ref('определяется...')
 const isIPv6 = ref(false)
-const resolver = ref('определяется...')
+const ipData = ref('определяется...')
 const blockConfirmed = ref(false)
 const locationInfo = ref(null)
 const isChecking = ref(true)
@@ -144,35 +149,48 @@ onMounted(async () => {
   blockConfirmed.value = blocked.value >= 3
 
   try {
-    const ipRes = await fetch('https://api.ipify.org?format=json')
-    const ipData = await ipRes.json()
-    userIP.value = ipData.ip
-
-    const ipv6Res = await fetch('https://api6.ipify.org?format=json')
-    const ipv6Data = await ipv6Res.json()
-    userIPv6.value = ipv6Data.ip
-    if (ipData.ip !== ipv6Data.ip) {
-      isIPv6.value = true
-    }
-
 
     try {
-      const geoRes = await fetch(`https://ipapi.co/${ipData.ip}/json/`)
+      const ipRes = await fetch('https://api.ipify.org?format=json')
+      const ipData = await ipRes.json()
+      userIP.value = ipData.ip
+    } catch (e) {
+      userIP.value = 'ошибка получения'
+      isError.value = true
+    }
+
+    try {
+      const ipv6Res = await fetch('https://api6.ipify.org?format=json')
+      const ipv6Data = await ipv6Res.json()
+      userIPv6.value = ipv6Data.ip
+      if (userIPv6.value.length > 0) {
+        isIPv6.value = true
+        console.log(userIPv6.value)
+      }
+
+    } catch (geoErr) {
+      console.error('Ошибка получения IPv6:', geoErr)
+    }
+
+    try {
+      // const geoRes = await fetch(`https://ipapi.co/${ipData.ip}/json/`)
+      const geoRes = await fetch(`http://ip-api.com/json/${userIP.value}`)
       const geoData = await geoRes.json()
+      // console.log(geoData)
       locationInfo.value = {
-        country: geoData.country_name,
+        country: geoData.country,
         city: geoData.city,
         org: geoData.org
       }
 
     } catch (geoErr) {
       console.error('Ошибка получения геолокации:', geoErr)
-      isError.value = true
+      // isError.value = true
     }
 
   } catch (e) {
     userIP.value = 'ошибка получения'
-    isError.value = true
+    // isError.value = true
   }
 
   isChecking.value = !!isError.value;
@@ -180,7 +198,7 @@ onMounted(async () => {
   if (isError.value) {
     setTimeout(() => {
       isWrong.value = true
-    }, 5000)
+    }, 3000)
   }
 
 })
