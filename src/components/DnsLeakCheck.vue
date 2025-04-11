@@ -73,6 +73,8 @@ const knownOpenBLD = [
   '188.245.102.7',
   '2a02:c206:2106:9620::1',
   '2a01:4f8:c2c:4868::1',
+  '2a01:4f9:c012:cf0a::1',
+  '2a02:c206:2101:5090::1',
   '91.217.10.23',
   '2a00:5da0:1:3002::2c',
   '2606:2040:2800:111::5',
@@ -120,7 +122,6 @@ async function performLeakTest() {
 
 const testDomains = ref([
   { name: 'do-tek.io', blocked: false },
-  { name: 'egov.kz', blocked: false },
   { name: 'facebook.com', blocked: false },
   { name: 'google.com', blocked: false },
   { name: 'gmail.com', blocked: false },
@@ -131,12 +132,11 @@ const testDomains = ref([
   { name: 'vk.com', blocked: false },
   { name: 'whatsapp.com', blocked: false },
   { name: 'yandex.com', blocked: false },
-  { name: 'youtube.com', blocked: false }
 ])
 
 onMounted(() => {
   performLeakTest()
-  verifyProofDomains();
+  // verifyProofDomains();
   verifyDomainAccess()
 })
 
@@ -160,11 +160,14 @@ async function verifyDomainAccess() {
   for (const domain of testDomains.value) {
     try {
       const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 1500)
+      const timeout = setTimeout(() => controller.abort(), 3000)
       await fetch(`https://${domain.name}/favicon.ico`, {
         mode: 'no-cors',
         cache: 'no-store',
-        signal: controller.signal
+        signal: controller.signal,
+        headers: {
+          'Accept': 'image/*'
+        }
       })
       domain.blocked = false
       clearTimeout(timeout)
