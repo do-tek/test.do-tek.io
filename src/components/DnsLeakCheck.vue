@@ -70,7 +70,13 @@ const knownOpenBLD = [
   '95.216.215.237',
   '109.123.245.41',
   '159.69.37.239',
-  '188.245.102.7'
+  '188.245.102.7',
+  '2a02:c206:2106:9620::1',
+  '2a01:4f8:c2c:4868::1',
+  '91.217.10.23',
+  '2a00:5da0:1:3002::2c',
+  '2606:2040:2800:111::5',
+  '2606:2040:2800:111::7'
 ]
 
 async function fetchText(url) {
@@ -116,15 +122,11 @@ const testDomains = ref([
   { name: 'do-tek.io', blocked: false },
   { name: 'egov.kz', blocked: false },
   { name: 'facebook.com', blocked: false },
+  { name: 'google.com', blocked: false },
   { name: 'gmail.com', blocked: false },
   { name: 'instagram.com', blocked: false },
-  { name: 'microsoft.com', blocked: false },
-  { name: 'outlook.com', blocked: false },
-  { name: 'pinterest.com', blocked: false },
   { name: 'reddit.com', blocked: false },
-  { name: 'snapchat.com', blocked: false },
   { name: 'telegram.org', blocked: false },
-  { name: 'tiktok.com', blocked: false },
   { name: 'twitter.com', blocked: false },
   { name: 'vk.com', blocked: false },
   { name: 'whatsapp.com', blocked: false },
