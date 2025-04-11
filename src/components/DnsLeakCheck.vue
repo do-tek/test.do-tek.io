@@ -1,0 +1,177 @@
+<template>
+
+  <h3 class="text-lg font-semibold mb-1 mt-8">DNS Leak Test</h3>
+
+
+  <div class="bg-gray-900 text-white rounded p-4 mt-2 w-full max-w-2xl">
+
+    <div v-if="loading" class="text-gray-400">Проверка...</div>
+    <div v-else-if="error" class="text-red-400">Ошибка: {{ error }}</div>
+    <div v-else>
+      <div class="text-xs text-white bg-gray-800 rounded p-4 w-full mb-3">
+        <div class="font-semibold mb-1">Ваш IP:</div>
+        <div v-for="(item, i) in ipBlocks" :key="'ip'+i">
+          <span class="text-white">{{ item.ip }}</span>
+          <span class="text-gray-400 ml-2" v-if="item.country_name">[{{ item.country_name }}<span v-if="item.asn">, {{ item.asn }}</span>]</span>
+        </div>
+      </div>
+      <div class="text-xs text-white bg-gray-800 rounded p-4 w-full mb-3">
+        <div class="font-semibold mb-1">DNS-серверы ({{ dnsServers.length }}):</div>
+        <div v-for="(dns, i) in dnsServers" :key="'dns'+i">
+          <span class="text-white">{{ dns.ip }}</span>
+          <span class="text-gray-400 ml-2" v-if="dns.country_name">[{{ dns.country_name }}<span v-if="dns.asn">, {{ dns.asn }}</span>]</span>
+        </div>
+      </div>
+      <div v-if="conclusion && !openbldProtected" class="mt-4 text-xs text-orange-400 bg-gray-800 rounded p-4 w-full">
+        <div class="font-semibold mb-1">⚠️ Возможна утечка DNS</div>
+        <div class="text-gray-400">Вывод: {{ conclusion.ip }}</div>
+      </div>
+      <div v-if="openbldProtected" class="mt-4 text-xs text-green-400 bg-gray-800 rounded p-4 w-full">
+        <div class="font-semibold mb-1">✅ Вы защищены DoTek DoNS</div>
+        <div class="text-gray-400">DNS-запросы проходят через проверенные защищённые резолверы OpenBLD.</div>
+      </div>
+      <div v-if="dnsProofValid" class="mt-4 text-xs text-blue-400 bg-gray-800 rounded p-4 w-full">
+        <div class="font-semibold mb-1">🔒 DNS подтверждён</div>
+        <div class="text-gray-400">Специальные тестовые домены успешно разрешены через ваш DNS. Используется OpenBLD.</div>
+      </div>
+    </div>
+    <div class="mt-6 text-xs text-white bg-gray-800 rounded p-4 w-full">
+      <div class="font-semibold mb-2">Тест доменов на доступность:</div>
+      <div v-for="domain in testDomains" :key="domain.name" class="flex items-center justify-between py-1">
+        <span>{{ domain.name }}</span>
+        <span :class="domain.blocked ? 'text-red-400' : 'text-green-400'">
+          {{ domain.blocked ? 'Заблокирован 🚫' : 'Доступен ✅' }}
+        </span>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+
+const results = ref([])
+const ipBlocks = ref([])
+const dnsServers = ref([])
+const conclusion = ref(null)
+const loading = ref(true)
+const error = ref(null)
+const openbldProtected = ref(false)
+const dnsProofValid = ref(false)
+const proofDomains = [
+  'proof1.openbld.net',
+  'proof2.openbld.net',
+  'verify.openbld.net'
+]
+
+const API_DOMAIN = 'bash.ws'
+
+const knownOpenBLD = [
+  '95.216.215.237',
+  '109.123.245.41',
+  '159.69.37.239',
+  '188.245.102.7'
+]
+
+async function fetchText(url) {
+  const response = await fetch(url)
+  if (!response.ok) throw new Error(`Ошибка запроса ${url}`)
+  return await response.text()
+}
+
+async function fetchJson(url) {
+  const response = await fetch(url)
+  if (!response.ok) throw new Error(`Ошибка запроса ${url}`)
+  return await response.json()
+}
+
+async function performLeakTest() {
+  try {
+    const id = (await fetchText(`https://${API_DOMAIN}/id`)).trim()
+
+    await Promise.all(
+        Array.from({ length: 11 }, (_, i) =>
+            fetch(`https://${i}.${id}.${API_DOMAIN}/favicon.ico`, { mode: 'no-cors', cache: 'no-store' }).catch(() => {})
+        )
+    )
+
+    const result = await fetchJson(`https://${API_DOMAIN}/dnsleak/test/${id}?json`)
+
+    results.value = result
+    ipBlocks.value = result.filter(r => r.type === 'ip')
+    dnsServers.value = result.filter(r => r.type === 'dns')
+    conclusion.value = result.find(r => r.type === 'conclusion')
+
+    // Check OpenBLD match
+    openbldProtected.value = dnsServers.value.some(server => knownOpenBLD.includes(server.ip))
+
+    loading.value = false
+  } catch (err) {
+    error.value = err.message || 'Не удалось выполнить DNS Leak Test'
+    loading.value = false
+  }
+}
+
+const testDomains = ref([
+  { name: 'do-tek.io', blocked: false },
+  { name: 'egov.kz', blocked: false },
+  { name: 'facebook.com', blocked: false },
+  { name: 'gmail.com', blocked: false },
+  { name: 'instagram.com', blocked: false },
+  { name: 'microsoft.com', blocked: false },
+  { name: 'outlook.com', blocked: false },
+  { name: 'pinterest.com', blocked: false },
+  { name: 'reddit.com', blocked: false },
+  { name: 'snapchat.com', blocked: false },
+  { name: 'telegram.org', blocked: false },
+  { name: 'tiktok.com', blocked: false },
+  { name: 'twitter.com', blocked: false },
+  { name: 'vk.com', blocked: false },
+  { name: 'whatsapp.com', blocked: false },
+  { name: 'yandex.com', blocked: false },
+  { name: 'youtube.com', blocked: false }
+])
+
+onMounted(() => {
+  performLeakTest()
+  verifyProofDomains();
+  verifyDomainAccess()
+})
+
+async function verifyProofDomains() {
+  try {
+    const checks = await Promise.allSettled(
+        proofDomains.map(domain =>
+            fetch(`https://${domain}/favicon.ico`, {
+              mode: 'no-cors',
+              cache: 'no-store'
+            })
+        )
+    )
+    dnsProofValid.value = checks.every(r => r.status === 'fulfilled')
+  } catch (err) {
+    dnsProofValid.value = false
+  }
+}
+
+async function verifyDomainAccess() {
+  for (const domain of testDomains.value) {
+    try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 1500)
+      await fetch(`https://${domain.name}/favicon.ico`, {
+        mode: 'no-cors',
+        cache: 'no-store',
+        signal: controller.signal
+      })
+      domain.blocked = false
+      clearTimeout(timeout)
+    } catch (err) {
+      domain.blocked = true
+    }
+  }
+}
+</script>
+
+<style scoped>
+</style>

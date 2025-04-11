@@ -1,0 +1,131 @@
+// src/views/Home.vue
+<template>
+  <section class="min-h-screen bg-gray-950 text-white flex flex-col items-center justify-center px-4 py-10">
+    <h1 class="text-2xl md:text-4xl font-bold mb-6 text-center">
+      Do-Tek DNS
+    </h1>
+
+    <ProtectionScore :score="protectionScore" :blocked="blocked" :total="domains.length" />
+
+    <div class="mt-4 text-center text-sm text-gray-400">
+      Ваш IP-адрес: <span class="font-mono text-white">{{ userIP }}</span>
+    </div>
+<!--    <div class="text-center text-sm text-gray-400">-->
+<!--      DNS-резолвер: <span class="font-mono text-white">{{ resolver }}</span>-->
+<!--    </div>-->
+    <div v-if="blockConfirmed" class="mt-2 text-green-400 text-sm font-medium">
+      ✅ Все тесты пройдены успешно. Вы защищены!
+    </div>
+
+    <div class="mt-4 text-xs text-gray-500 bg-gray-800 rounded p-4 w-full max-w-2xl">
+      <div class="mb-1 font-semibold">Отладка:</div>
+      <div>IP клиента: <span class="text-white">{{ userIP }}</span></div>
+      <div>Количество заблокированных доменов: <span class="text-white">{{ blocked }}</span></div>
+      <div>Подтверждение блокировок: <span :class="blockConfirmed ? 'text-green-400' : 'text-red-400'">{{ blockConfirmed }}</span></div>
+    </div>
+
+    <div v-if="locationInfo" class="mt-4 text-xs text-gray-500 bg-gray-800 rounded p-4 w-full max-w-2xl">
+      <div class="mb-1 font-semibold">Геолокация по IP:</div>
+      <div>Страна: <span class="text-white">{{ locationInfo.country }}</span></div>
+      <div>Город: <span class="text-white">{{ locationInfo.city }}</span></div>
+      <div>Провайдер: <span class="text-white">{{ locationInfo.org }}</span></div>
+    </div>
+
+    <div class="mt-8 w-full max-w-2xl space-y-2">
+      <h3 class="text-lg font-semibold mb-2">Тест доменов на блокировку</h3>
+
+      <div
+          v-for="(domain, index) in domains"
+          :key="index"
+          class="text-xs flex justify-between items-center px-4 py-2 rounded border border-gray-800 bg-gray-900"
+      >
+        <span>{{ domain.name }}</span>
+        <span :class="domain.blocked ? 'text-red-400' : 'text-green-400'">
+          {{ domain.blocked ? 'Заблокирован 🚫' : 'Доступен ✅' }}
+        </span>
+      </div>
+      <div v-if="blocked === domains.length" class="mt-6 text-green-400 bg-gray-800 text-xs rounded p-4">
+        ✅ Все тестовые домены успешно заблокированы. All checks passed.
+      </div>
+    </div>
+
+    <DnsLeakCheck />
+
+  </section>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import ProtectionScore from '@/components/ProtectionScore.vue'
+import DnsLeakCheck from '@/components/DnsLeakCheck.vue'
+
+const domains = ref([
+      { name: 'adclick.example.test', blocked: false },
+      { name: 'adclick.g.doubleclick.net', blocked: false },
+      { name: 'ads.example.test', blocked: false },
+      { name: 'ads.openads.io', blocked: false },
+      { name: 'click.example.test', blocked: false },
+      { name: 'clickbait.example.test', blocked: false },
+      { name: 'popup.example.test', blocked: false },
+      { name: 'popup.malvertising.local', blocked: false },
+      { name: 'track.example.test', blocked: false },
+      { name: 'track.doubleclick.net', blocked: false },
+      { name: 'track.openads.io', blocked: false },
+      { name: 'tracking.rus.miui.com', blocked: false }
+    ]
+)
+
+const blocked = ref(0)
+const protectionScore = ref(0)
+const userIP = ref('определяется...')
+const resolver = ref('определяется...')
+const blockConfirmed = ref(false)
+const locationInfo = ref(null)
+
+onMounted(async () => {
+  let localBlocked = 0
+  for (const domain of domains.value) {
+    try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 1500)
+      await fetch(`https://${domain.name}/favicon.ico`, {
+        mode: 'no-cors',
+        signal: controller.signal,
+      })
+      domain.blocked = false
+      clearTimeout(timeout)
+    } catch (err) {
+      domain.blocked = true
+      localBlocked++
+    }
+  }
+  blocked.value = localBlocked
+  protectionScore.value = Math.round((blocked.value / domains.value.length) * 100)
+
+  blockConfirmed.value = blocked.value >= 3
+
+  try {
+    const ipRes = await fetch('https://api.ipify.org?format=json')
+    const ipData = await ipRes.json()
+    userIP.value = ipData.ip
+
+    try {
+      const geoRes = await fetch(`https://ipapi.co/${ipData.ip}/json/`)
+      const geoData = await geoRes.json()
+      locationInfo.value = {
+        country: geoData.country_name,
+        city: geoData.city,
+        org: geoData.org
+      }
+    } catch (geoErr) {
+      console.error('Ошибка получения геолокации:', geoErr)
+    }
+
+  } catch (e) {
+    userIP.value = 'ошибка получения'
+  }
+})
+</script>
+
+<style scoped>
+</style>
