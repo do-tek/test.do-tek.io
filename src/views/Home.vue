@@ -28,7 +28,7 @@
         ✅ Все тесты пройдены успешно. Вы защищены!
       </div>
       <div v-else-if="blockConfirmed" class="mt-2 text-yellow-400 text-sm font-medium">
-        ⚠️ Частично защищено: заблокировано {{ blocked }} из {{ domains.length }} доменов
+        ⚠️ Заблокировано {{ blocked }} из {{ domains.length }} доменов
       </div>
       <div v-else class="mt-2 text-red-400 text-sm font-medium">
         ❌ Вероятно используется сторонний DNS. Нет защиты.
