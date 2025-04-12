@@ -31,7 +31,7 @@
         ⚠️ Заблокировано {{ blocked }} из {{ domains.length }} доменов
       </div>
       <div v-else class="mt-2 text-red-400 text-sm font-medium">
-        ❌ Вероятно используется сторонний DNS. Нет защиты.
+        ❌ Вероятно в цепочке присутствует сторонний DNS.
       </div>
 
     </div>
@@ -59,7 +59,7 @@
     </div>
 
     <div class="mt-8 w-full max-w-2xl space-y-2">
-      <h3 class="text-lg font-semibold mb-2">Тест доменов на блокировку</h3>
+      <h3 class="text-lg font-semibold mb-2">Тесты блокировки</h3>
 
       <div
           v-for="(domain, index) in domains"
@@ -93,18 +93,8 @@ import ProtectionScore from '@/components/ProtectionScore.vue'
 import DnsLeakCheck from '@/components/DnsLeakCheck.vue'
 
 const domains = ref([
-      { name: 'adclick.example.test', blocked: false },
-      { name: 'adclick.g.doubleclick.net', blocked: false },
-      { name: 'ads.example.test', blocked: false },
-      { name: 'ads.openads.io', blocked: false },
-      { name: 'click.example.test', blocked: false },
-      { name: 'clickbait.example.test', blocked: false },
-      { name: 'popup.example.test', blocked: false },
-      { name: 'popup.malvertising.local', blocked: false },
-      { name: 'track.example.test', blocked: false },
-      { name: 'track.doubleclick.net', blocked: false },
-      { name: 'track.openads.io', blocked: false },
-      { name: 'tracking.rus.miui.com', blocked: false }
+      { name: 'blockcheck1.system-checks.org', blocked: false },
+      { name: 'blockcheck2.system-checks.org', blocked: false },
     ]
 )
 

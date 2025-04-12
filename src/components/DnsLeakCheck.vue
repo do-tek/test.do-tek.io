@@ -27,21 +27,12 @@
         <div class="text-gray-400">Вывод: {{ conclusion.ip }}</div>
       </div>
       <div v-if="openbldProtected" class="mt-4 text-xs text-green-400 bg-gray-800 rounded p-4 w-full">
-        <div class="font-semibold mb-1">✅ Вы защищены DoTek DoNS</div>
-        <div class="text-gray-400">DNS-запросы проходят через проверенные защищённые резолверы OpenBLD.</div>
+        <div class="font-semibold mb-1">✅ Обнаружен DoTek DoNS</div>
+        <div class="text-gray-400">В цепочке DNS-запросов присутствуют защищённые резолверы.</div>
       </div>
       <div v-if="dnsProofValid" class="mt-4 text-xs text-blue-400 bg-gray-800 rounded p-4 w-full">
         <div class="font-semibold mb-1">🔒 DNS подтверждён</div>
         <div class="text-gray-400">Специальные тестовые домены успешно разрешены через ваш DNS. Используется OpenBLD.</div>
-      </div>
-    </div>
-    <div class="mt-6 text-xs text-white bg-gray-800 rounded p-4 w-full">
-      <div class="font-semibold mb-2">Тест доменов на доступность:</div>
-      <div v-for="domain in testDomains" :key="domain.name" class="flex items-center justify-between py-1">
-        <span>{{ domain.name }}</span>
-        <span :class="domain.blocked ? 'text-red-400' : 'text-green-400'">
-          {{ domain.blocked ? 'Заблокирован 🚫' : 'Доступен ✅' }}
-        </span>
       </div>
     </div>
   </div>
@@ -58,11 +49,6 @@ const loading = ref(true)
 const error = ref(null)
 const openbldProtected = ref(false)
 const dnsProofValid = ref(false)
-const proofDomains = [
-  'proof1.openbld.net',
-  'proof2.openbld.net',
-  'verify.openbld.net'
-]
 
 const API_DOMAIN = 'bash.ws'
 
@@ -120,62 +106,10 @@ async function performLeakTest() {
   }
 }
 
-const testDomains = ref([
-  { name: 'do-tek.io', blocked: false },
-  { name: 'facebook.com', blocked: false },
-  { name: 'google.com', blocked: false },
-  { name: 'gmail.com', blocked: false },
-  { name: 'instagram.com', blocked: false },
-  { name: 'reddit.com', blocked: false },
-  { name: 'telegram.org', blocked: false },
-  { name: 'twitter.com', blocked: false },
-  { name: 'vk.com', blocked: false },
-  { name: 'whatsapp.com', blocked: false },
-  { name: 'yandex.com', blocked: false },
-])
-
 onMounted(() => {
   performLeakTest()
-  // verifyProofDomains();
-  verifyDomainAccess()
 })
 
-async function verifyProofDomains() {
-  try {
-    const checks = await Promise.allSettled(
-        proofDomains.map(domain =>
-            fetch(`https://${domain}/favicon.ico`, {
-              mode: 'no-cors',
-              cache: 'no-store'
-            })
-        )
-    )
-    dnsProofValid.value = checks.every(r => r.status === 'fulfilled')
-  } catch (err) {
-    dnsProofValid.value = false
-  }
-}
-
-async function verifyDomainAccess() {
-  for (const domain of testDomains.value) {
-    try {
-      const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 3000)
-      await fetch(`https://${domain.name}/favicon.ico`, {
-        mode: 'no-cors',
-        cache: 'no-store',
-        signal: controller.signal,
-        headers: {
-          'Accept': 'image/*'
-        }
-      })
-      domain.blocked = false
-      clearTimeout(timeout)
-    } catch (err) {
-      domain.blocked = true
-    }
-  }
-}
 </script>
 
 <style scoped>
