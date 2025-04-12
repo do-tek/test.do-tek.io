@@ -7,23 +7,45 @@
 
     <ProtectionScore :score="protectionScore" :blocked="blocked" :total="domains.length" />
 
+    <!-- IPv4 -->
     <div class="mt-4 text-center text-sm text-gray-400">
-      Ваш IPv4-адрес: <span class="font-mono text-white">{{ userIP }}</span>
+      Ваш IPv4-адрес:
+      <span class="font-mono text-white">{{ userIP }}</span>
+      <button class="ml-2 text-xs text-blue-400 hover:underline" @click="copyToClipboard(userIP, 'ip')">копировать</button>
+      <transition name="fade">
+        <span v-if="showCopied === 'ip'" class="ml-2 text-green-400 text-xs flex items-center">
+          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg> Скопировано
+        </span>
+      </transition>
     </div>
 
+    <!-- IPv6 -->
     <div v-if="isIPv6" class="mt-4 text-center text-sm text-gray-400">
-      IPv6-адрес: <span class="font-mono text-white">{{ userIPv6 }}</span>
+      IPv6-адрес:
+      <span class="font-mono text-white">{{ userIPv6 }}</span>
+      <button class="ml-2 text-xs text-blue-400 hover:underline" @click="copyToClipboard(userIPv6, 'ipv6')">копировать</button>
+      <transition name="fade">
+        <span v-if="showCopied === 'ipv6'" class="ml-2 text-green-400 text-xs flex items-center">
+          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg> Скопировано
+        </span>
+      </transition>
     </div>
 
-<!--    <div class="text-center text-sm text-gray-400">-->
-<!--      DNS-резолвер: <span class="font-mono text-white">{{ resolver }}</span>-->
-<!--    </div>-->
-<!--    <div v-if="blockConfirmed" class="mt-2 text-green-400 text-sm font-medium">-->
-<!--      ✅ Все тесты пройдены успешно. Вы защищены!-->
-<!--    </div>-->
+    <!-- Состояние проверки -->
+    <div v-if="isChecking && !isWrong" class="mt-2 text-blue-400 text-sm font-medium">
+      <svg class="animate-spin inline w-4 h-4 mr-1" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" />
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8z" />
+      </svg>
+      Идёт проверка. Пожалуйста, подождите...
+    </div>
 
+    <!-- Результат защиты -->
     <div v-if="!isChecking" class="mt-2 text-green-400 text-sm font-medium">
-
       <div v-if="allBlocked" class="mt-2 text-green-400 text-sm font-medium">
         ✅ Тесты блокировки пройдены успешно!
       </div>
@@ -33,17 +55,9 @@
       <div v-else class="mt-2 text-red-400 text-sm font-medium">
         ❌ Вероятно в цепочке присутствует сторонний DNS.
       </div>
-
     </div>
 
-    <div v-if="isChecking && !isWrong" class="mt-2 text-blue-400 text-sm font-medium">
-      <svg class="animate-spin inline w-4 h-4 mr-1 text-blue-400" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8z"></path></svg> Идёт проверка. Пожалуйста, подождите...
-    </div>
-
-<!--    <div v-if="isWrong" class="mt-2 text-red-400 text-sm font-medium">-->
-<!--      😕 Ошибка получения данных. Что то пошло не так.-->
-<!--    </div>-->
-
+    <!-- Отладка -->
     <div class="mt-4 text-xs text-gray-500 bg-gray-800 rounded p-4 w-full max-w-2xl">
       <div class="mb-1 font-semibold">Отладка:</div>
       <div>IP клиента: <span class="text-white">{{ userIP }}</span></div>
@@ -51,6 +65,7 @@
       <div>Подтверждение блокировок: <span :class="blockConfirmed ? 'text-green-400' : 'text-red-400'">{{ blockConfirmed }}</span></div>
     </div>
 
+    <!-- Гео -->
     <div v-if="locationInfo && !isWrong" class="mt-4 text-xs text-gray-500 bg-gray-800 rounded p-4 w-full max-w-2xl">
       <div class="mb-1 font-semibold">Геолокация по IP:</div>
       <div>Страна: <span class="text-white">{{ locationInfo.country }}</span></div>
@@ -58,21 +73,14 @@
       <div>Провайдер: <span class="text-white">{{ locationInfo.org }}</span></div>
     </div>
 
+    <!-- Тесты блокировки -->
     <div class="mt-8 w-full max-w-2xl space-y-2">
       <h3 class="text-lg font-semibold mb-2">Тесты блокировки</h3>
-
-      <div
-          v-for="(domain, index) in domains"
-          :key="index"
-          class="text-xs flex justify-between items-center px-4 py-2 rounded border border-gray-800 bg-gray-900"
-      >
+      <div v-for="domain in domains" :key="domain.name" class="text-xs flex justify-between items-center px-4 py-2 rounded border border-gray-800 bg-gray-900">
         <span>{{ domain.name }}</span>
         <span :class="domain.blocked ? 'text-green-400' : 'text-red-400'">
           {{ domain.blocked ? 'Заблокирован ✅' : 'Доступен 🚫' }}
         </span>
-      </div>
-      <div v-if="blocked === domains.length" class="mt-6 text-green-400 bg-gray-800 text-xs rounded p-4">
-        ✅ Все тестовые домены успешно заблокированы. All checks passed.
       </div>
     </div>
 
@@ -110,6 +118,18 @@ const isChecking = ref(true)
 const allBlocked = computed(() => blocked.value === domains.value.length)
 const isError = ref(false)
 const isWrong = ref(false)
+
+const showCopied = ref(null)
+
+function copyToClipboard(value, target = 'ip') {
+  if (!value) return
+  navigator.clipboard.writeText(value).then(() => {
+    showCopied.value = target
+    setTimeout(() => (showCopied.value = null), 1500)
+  }).catch(err => {
+    console.warn('Ошибка копирования:', err)
+  })
+}
 
 onMounted(async () => {
   isChecking.value = true
@@ -196,4 +216,10 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.4s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
 </style>
