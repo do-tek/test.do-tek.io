@@ -25,7 +25,7 @@
     <div v-if="!isChecking" class="mt-2 text-green-400 text-sm font-medium">
 
       <div v-if="allBlocked" class="mt-2 text-green-400 text-sm font-medium">
-        ✅ Все тесты пройдены успешно. Вы защищены!
+        ✅ Тесты блокировки пройдены успешно!
       </div>
       <div v-else-if="blockConfirmed" class="mt-2 text-yellow-400 text-sm font-medium">
         ⚠️ Заблокировано {{ blocked }} из {{ domains.length }} доменов
