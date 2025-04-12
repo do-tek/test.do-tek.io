@@ -183,8 +183,8 @@ onMounted(async () => {
     }
 
     try {
-      // const geoRes = await fetch(`https://ipapi.co/${ipData.ip}/json/`)
-      const geoRes = await fetch(`https://ip-api.com/json/${userIP.value}`)
+      const geoRes = await fetch(`https://ipapi.co/${userIP.value}/json/`)
+      //const geoRes = await fetch(`https://ip-api.com/json/${userIP.value}`)
       const geoData = await geoRes.json()
       // console.log(geoData)
       locationInfo.value = {
