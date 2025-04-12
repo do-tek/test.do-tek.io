@@ -75,6 +75,7 @@
     <div v-if="locationInfo && !isWrong" class="mt-4 text-xs text-gray-500 bg-gray-800 rounded p-4 w-full max-w-2xl">
       <div class="mb-1 font-semibold">Геолокация по IP:</div>
       <div class="flex items-center gap-2">
+        Страна:
         <img v-if="locationInfo.flag" :src="locationInfo.flag" alt="флаг" class="w-5 h-4 inline-block rounded-sm border" />
         <span class="text-white">{{ locationInfo.country }}</span>
       </div>
