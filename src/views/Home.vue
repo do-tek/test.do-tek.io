@@ -66,12 +66,22 @@
     </div>
 
     <!-- Гео -->
+<!--    <div v-if="locationInfo && !isWrong" class="mt-4 text-xs text-gray-500 bg-gray-800 rounded p-4 w-full max-w-2xl">-->
+<!--      <div class="mb-1 font-semibold">Геолокация по IP:</div>-->
+<!--      <div>Страна: <span class="text-white">{{ locationInfo.country }}</span></div>-->
+<!--      <div>Город: <span class="text-white">{{ locationInfo.city }}</span></div>-->
+<!--      <div>Провайдер: <span class="text-white">{{ locationInfo.org }}</span></div>-->
+<!--    </div>-->
     <div v-if="locationInfo && !isWrong" class="mt-4 text-xs text-gray-500 bg-gray-800 rounded p-4 w-full max-w-2xl">
       <div class="mb-1 font-semibold">Геолокация по IP:</div>
-      <div>Страна: <span class="text-white">{{ locationInfo.country }}</span></div>
+      <div class="flex items-center gap-2">
+        <img v-if="locationInfo.flag" :src="locationInfo.flag" alt="флаг" class="w-5 h-4 inline-block rounded-sm border" />
+        <span class="text-white">{{ locationInfo.country }}</span>
+      </div>
       <div>Город: <span class="text-white">{{ locationInfo.city }}</span></div>
       <div>Провайдер: <span class="text-white">{{ locationInfo.org }}</span></div>
     </div>
+
 
     <!-- Тесты блокировки -->
     <div class="mt-8 w-full max-w-2xl space-y-2">
@@ -182,21 +192,39 @@ onMounted(async () => {
       console.error('Ошибка получения IPv6:', geoErr)
     }
 
-    try {
-      const geoRes = await fetch(`https://ipapi.co/${userIP.value}/json/`)
-      //const geoRes = await fetch(`https://ip-api.com/json/${userIP.value}`)
-      const geoData = await geoRes.json()
-      // console.log(geoData)
-      locationInfo.value = {
-        country: geoData.country,
-        city: geoData.city,
-        org: geoData.org
-      }
+    // try {
+    //   const geoRes = await fetch(`https://ipapi.co/${userIP.value}/json/`)
+    //   //const geoRes = await fetch(`https://ip-api.com/json/${userIP.value}`)
+    //   const geoData = await geoRes.json()
+    //   // console.log(geoData)
+    //   locationInfo.value = {
+    //     country: geoData.country,
+    //     city: geoData.city,
+    //     org: geoData.org
+    //   }
+    //
+    // } catch (geoErr) {
+    //   console.error('Ошибка получения геолокации:', geoErr)
+    //   // isError.value = true
+    // }
 
+    try {
+      const geoRes = await fetch(`https://ipwho.is/${userIP.value}`)
+      const geoData = await geoRes.json()
+
+      if (geoData.success) {
+        locationInfo.value = {
+          country: geoData.country,
+          city: geoData.city,
+          org: geoData.connection?.isp || 'n/a',
+          flag: geoData.flag?.img || '',
+          emoji: geoData.flag?.emoji || ''
+        }
+      }
     } catch (geoErr) {
       console.error('Ошибка получения геолокации:', geoErr)
-      // isError.value = true
     }
+
 
   } catch (e) {
     userIP.value = 'ошибка получения'
