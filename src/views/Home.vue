@@ -67,8 +67,8 @@
           class="text-xs flex justify-between items-center px-4 py-2 rounded border border-gray-800 bg-gray-900"
       >
         <span>{{ domain.name }}</span>
-        <span :class="domain.blocked ? 'text-red-400' : 'text-green-400'">
-          {{ domain.blocked ? 'Заблокирован 🚫' : 'Доступен ✅' }}
+        <span :class="domain.blocked ? 'text-green-400' : 'text-red-400'">
+          {{ domain.blocked ? 'Заблокирован ✅' : 'Доступен 🚫' }}
         </span>
       </div>
       <div v-if="blocked === domains.length" class="mt-6 text-green-400 bg-gray-800 text-xs rounded p-4">
@@ -136,7 +136,7 @@ onMounted(async () => {
   blocked.value = localBlocked
   protectionScore.value = Math.round((blocked.value / domains.value.length) * 100)
 
-  blockConfirmed.value = blocked.value >= 3
+  blockConfirmed.value = blocked.value >= 2
 
   try {
 
