@@ -9,10 +9,12 @@
     <div v-else-if="error" class="text-red-400">Ошибка: {{ error }}</div>
     <div v-else>
       <div class="text-xs text-white bg-gray-800 rounded p-4 w-full mb-3">
-        <div class="font-semibold mb-1">Ваш IP:</div>
-        <div v-for="(item, i) in ipBlocks" :key="'ip'+i">
-          <span class="text-white">{{ item.ip }}</span>
-          <span class="text-gray-400 ml-2" v-if="item.country_name">[{{ item.country_name }}<span v-if="item.asn">, {{ item.asn }}</span>]</span>
+        <div class="font-semibold mb-1">Клиент IP:</div>
+        <div v-for="(item, i) in ipBlocks" :key="'ip'+i" class="mb-2">
+          <div class="text-white">{{ item.ip }}</div>
+          <div class="text-gray-400 text-xs" v-if="item.country_name">
+            [{{ item.country_name }}<span v-if="item.asn">, {{ item.asn }}</span>]
+          </div>
         </div>
       </div>
       <div class="text-xs text-white bg-gray-800 rounded p-4 w-full mb-3">
