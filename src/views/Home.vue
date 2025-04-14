@@ -94,10 +94,6 @@
         </span>
       </div>
 
-      <button @click="checkDomains" class="mt-4 text-xs text-blue-400 hover:underline">
-        🔁 Повторить тесты
-      </button>
-
     </div>
 
     <DnsLeakCheck />
