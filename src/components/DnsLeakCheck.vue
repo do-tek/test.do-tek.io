@@ -87,7 +87,14 @@ async function performLeakTest() {
 
     await Promise.all(
         Array.from({ length: 11 }, (_, i) =>
-            fetch(`https://${i}.${id}.${API_DOMAIN}/favicon.ico`, { mode: 'no-cors', cache: 'no-store' }).catch(() => {})
+            fetch(`https://${i}.${id}.${API_DOMAIN}/favicon.ico?_=${Date.now()}`, {
+              mode: 'no-cors',
+              cache: 'no-store',
+              headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache',
+              }
+            }).catch(() => {})
         )
     )
 
