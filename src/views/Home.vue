@@ -93,6 +93,11 @@
           {{ domain.blocked ? 'Заблокирован ✅' : 'Доступен 🚫' }}
         </span>
       </div>
+
+      <button @click="checkDomains" class="mt-4 text-xs text-blue-400 hover:underline">
+        🔁 Повторить тесты
+      </button>
+
     </div>
 
     <DnsLeakCheck />
@@ -142,36 +147,45 @@ function copyToClipboard(value, target = 'ip') {
   })
 }
 
+function isAllBlocked() {
+  return blocked.value === domains.value.length
+}
+
+function checkDomainsWithImgFallback() {
+  isChecking.value = true
+  blocked.value = 0
+
+  domains.value.forEach((domain, index) => {
+    const img = new Image()
+    img.onload = () => {
+      domain.blocked = false
+      finalize(index)
+    }
+    img.onerror = () => {
+      domain.blocked = true
+      blocked.value++
+      finalize(index)
+    }
+    img.src = `https://${domain.name}/favicon.ico?_=${Date.now()}`
+  })
+}
+
+function finalize(index) {
+  protectionScore.value = Math.round((blocked.value / domains.value.length) * 100)
+  blockConfirmed.value = blocked.value >= 2
+
+  if (index === domains.value.length - 1) {
+    isChecking.value = false
+  }
+}
+
+
 onMounted(async () => {
   isChecking.value = true
   let localBlocked = 0
   blocked.value = 0
 
-  for (const domain of domains.value) {
-    try {
-      const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 1500)
-      await fetch(`https://${domain.name}/favicon.ico`, {
-        mode: 'no-cors',
-        cache: 'no-store',
-        signal: controller.signal,
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        }
-      })
-      domain.blocked = false
-      clearTimeout(timeout)
-    } catch (err) {
-      domain.blocked = true
-      localBlocked++
-      blocked.value++
-    }
-  }
-  blocked.value = localBlocked
-  protectionScore.value = Math.round((blocked.value / domains.value.length) * 100)
-
-  blockConfirmed.value = blocked.value >= 2
+  checkDomainsWithImgFallback()
 
   try {
 
