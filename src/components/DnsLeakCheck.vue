@@ -29,7 +29,7 @@
 <!--        <div class="text-gray-400">Вывод: {{ conclusion.ip }}</div>-->
       </div>
       <div v-if="openbldProtected" class="mt-4 text-xs text-green-400 bg-gray-800 rounded p-4 w-full">
-        <div class="font-semibold mb-1">✅ Обнаружен Do-Tek DoNS</div>
+        <div class="font-semibold mb-1">✅ Обнаружен(ы) Do-Tek DNS</div>
         <div class="text-gray-400">В цепочке DNS-запросов присутствуют защищённые резолверы.</div>
       </div>
       <div v-if="dnsProofValid" class="mt-4 text-xs text-blue-400 bg-gray-800 rounded p-4 w-full">
