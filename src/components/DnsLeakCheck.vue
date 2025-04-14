@@ -25,11 +25,11 @@
         </div>
       </div>
       <div v-if="conclusion && !openbldProtected" class="mt-4 text-xs text-orange-400 bg-gray-800 rounded p-4 w-full">
-        <div class="font-semibold mb-1">⚠️ Do-Tel DNS не обнаружены.</div>
+        <div class="font-semibold mb-1">⚠️ Do-Tek DNS не обнаружены.</div>
 <!--        <div class="text-gray-400">Вывод: {{ conclusion.ip }}</div>-->
       </div>
       <div v-if="openbldProtected" class="mt-4 text-xs text-green-400 bg-gray-800 rounded p-4 w-full">
-        <div class="font-semibold mb-1">✅ Обнаружен DoTek DoNS</div>
+        <div class="font-semibold mb-1">✅ Обнаружен Do-Tek DoNS</div>
         <div class="text-gray-400">В цепочке DNS-запросов присутствуют защищённые резолверы.</div>
       </div>
       <div v-if="dnsProofValid" class="mt-4 text-xs text-blue-400 bg-gray-800 rounded p-4 w-full">
