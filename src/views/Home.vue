@@ -151,10 +151,14 @@ onMounted(async () => {
     try {
       const controller = new AbortController()
       const timeout = setTimeout(() => controller.abort(), 1500)
-      await fetch(`https://${domain.name}/favicon.ico`, {
+      await fetch(`https://${domain.name}/favicon.ico?_=${Date.now()}`, {
         mode: 'no-cors',
         cache: 'no-store',
         signal: controller.signal,
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
       })
       domain.blocked = false
       clearTimeout(timeout)
